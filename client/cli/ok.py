@@ -261,6 +261,10 @@ def main():
 
         force_authenticate = args.authenticate
         retry = True
+
+        # Force local mode for BYU okpy.
+        args.local = True
+        
         while retry:
             retry = False
             if force_authenticate:

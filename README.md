@@ -4,6 +4,8 @@ ok client
 The ok client script (written in Python) supports programming projects
 by running tests, tracking progress, and assisting in debugging.
 
+> **Note:** This fork has been specifically modified for BYU CS 111 students.
+
 Visit [http://okpy.org](http://okpy.org) to use our hosted service for
 your course.
 
