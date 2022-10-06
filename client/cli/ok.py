@@ -72,6 +72,7 @@ CLIENT_ROOT = os.path.dirname(client.__file__)
 # Command-line Interface #
 ##########################
 
+
 def parse_input(command_input=None):
     """Parses command line input."""
     parser = argparse.ArgumentParser(
@@ -82,78 +83,78 @@ def parse_input(command_input=None):
 
     testing = parser.add_argument_group('running tests')
     testing.add_argument('-q', '--question', type=str, action='append',
-                        help="run tests for a specific question")
+                         help="run tests for a specific question")
     testing.add_argument('--suite', type=str, default=None,
-                        help="run cases from a specific suite")
+                         help="run cases from a specific suite")
     testing.add_argument('--case', type=str, action='append',
-                        help="run specific cases")
+                         help="run specific cases")
     testing.add_argument('-u', '--unlock', action='store_true',
-                        help="unlock tests interactively")
+                         help="unlock tests interactively")
     testing.add_argument('-i', '--interactive', action='store_true',
-                        help="start the Python interpreter after a failed test")
+                         help="start the Python interpreter after a failed test")
     testing.add_argument('-v', '--verbose', action='store_true',
-                        help="show all tests (not just passing tests) up to failing line (if any)")
+                         help="show all tests (not just passing tests) up to failing line (if any)")
     testing.add_argument('-t', '--testing', nargs='?', type=str, const='mytests.rst',
-                        help='run tests from rst file (default: mytests.rst)')
+                         help='run tests from rst file (default: mytests.rst)')
     testing.add_argument('--all', action='store_true',
-                        help="run tests for all questions in config file")
+                         help="run tests for all questions in config file")
     testing.add_argument('--submit', action='store_true',
-                        help="submit the assignment")
+                         help="submit the assignment")
     testing.add_argument('--backup', action='store_true',
-                        help="attempt to reliably backup your work")
+                         help="attempt to reliably backup your work")
     testing.add_argument('--revise', action='store_true',
-                        help="submit composition revision")
+                         help="submit composition revision")
     testing.add_argument('--timeout', type=int, default=10,
-                        help="set the timeout duration (in seconds) for running tests")
+                         help="set the timeout duration (in seconds) for running tests")
     testing.add_argument('-cov', '--coverage', action='store_true',
-                        help="get suggestions on what lines to add tests for")
+                         help="get suggestions on what lines to add tests for")
     testing.add_argument('--autobackup', action='store_true',
-                        help="back up your work every minute in the background")
+                         help="back up your work every minute in the background")
     # runs an autobackup in the foreground. Used by `--autobackup`,
     # if you specify this other options will be ignored.
     testing.add_argument('--autobackup-actual-run-sync', action='store_true',
-                        help=argparse.SUPPRESS)
+                         help=argparse.SUPPRESS)
     # Debugging
     debugging = parser.add_argument_group('debugging tools for students')
 
     debugging.add_argument('--trace', action='store_true',
-                         help="trace code and launch python tutor")
+                           help="trace code and launch python tutor")
     debugging.add_argument('--trace-print', action='store_true',
-                         help="print the trace instead of visualizing it")
+                           help="print the trace instead of visualizing it")
 
     # Experiments
     experiment = parser.add_argument_group('experiment options')
     experiment.add_argument('--no-experiments', action='store_true',
-                        help="do not run experimental features")
+                            help="do not run experimental features")
     experiment.add_argument('--hint', action='store_true',
-                        help="give a hint (if available)")
+                            help="give a hint (if available)")
     experiment.add_argument('--style', action='store_true',
-                        help="run AutoStyle feedback system")
+                            help="run AutoStyle feedback system")
     experiment.add_argument('--collab', action='store_true',
-                        help="launch collaborative programming environment")
+                            help="launch collaborative programming environment")
 
     # Debug information
     debug = parser.add_argument_group('ok developer debugging options')
     debug.add_argument('--version', action='store_true',
-                        help="print the version number and exit")
+                       help="print the version number and exit")
     debug.add_argument('--tests', action='store_true',
-                        help="display a list of all available tests")
+                       help="display a list of all available tests")
     debug.add_argument('--debug', action='store_true',
-                        help="show debugging output")
+                       help="show debugging output")
 
     # Grading
     grading = parser.add_argument_group('grading options')
     grading.add_argument('--lock', action='store_true',
-                        help="lock the tests in a directory")
+                         help="lock the tests in a directory")
     grading.add_argument('--score', action='store_true',
-                        help="score the assignment")
+                         help="score the assignment")
     grading.add_argument('--score-out', type=str,
-                        nargs='?', const=None, default=None,
-                        help="write scores to a file")
+                         nargs='?', const=None, default=None,
+                         help="write scores to a file")
     grading.add_argument('--config', type=str,
-                        help="use a specific configuration file")
+                         help="use a specific configuration file")
     grading.add_argument('--ignore-empty', action='store_true',
-                        help="ignore empty doctests")
+                         help="ignore empty doctests")
 
     # Encrypt
     crypt = parser.add_argument_group('encryption')
@@ -189,10 +190,11 @@ def parse_input(command_input=None):
     server.add_argument('--update', action='store_true',
                         help="update ok and exit")
     # used in faded-parsons-frontend repo
-    server.add_argument('--parsons', action='store_true', 
-                        help="run parsons problems in browser")  
+    server.add_argument('--parsons', action='store_true',
+                        help="run parsons problems in browser")
 
     return parser.parse_args(command_input)
+
 
 def main():
     """Run all relevant aspects of ok.py."""
@@ -210,14 +212,19 @@ def main():
     elif args.update:
         print("Current version: {}".format(client.__version__))
         did_update = software_update.check_version(
-                args.server, client.__version__, client.FILE_NAME, timeout=10)
+            args.server, client.__version__, client.FILE_NAME, timeout=10)
         exit(not did_update)  # exit with error if ok failed to update
 
     assign = None
+
+    # Force local mode for BYU okpy.
+    args.local = True
+
     try:
         if args.get_token:
             if args.nointeract:
-                print_error("Cannot pass in --get-token and --nointeract, the only way to get a token is by interaction")
+                print_error(
+                    "Cannot pass in --get-token and --nointeract, the only way to get a token is by interaction")
                 exit(1)
             access_token = auth.authenticate(args, force=True)
             print("Token: {}".format(access_token))
@@ -262,14 +269,12 @@ def main():
         force_authenticate = args.authenticate
         retry = True
 
-        # Force local mode for BYU okpy.
-        args.local = True
-        
         while retry:
             retry = False
             if force_authenticate:
                 if args.nointeract:
-                    print_error("Cannot pass in --authenticate and --nointeract")
+                    print_error(
+                        "Cannot pass in --authenticate and --nointeract")
                     exit(1)
                 # Authenticate and check for success
                 if not assign.authenticate(force=True):
@@ -290,8 +295,10 @@ def main():
                     retry = True
                 if retry:
                     msg = "without a browser" if args.no_browser else "with a browser"
-                    log.warning('Authentication exception occurred; will retry {0}'.format(msg), exc_info=True)
-                    print_error('Authentication error; will try to re-authenticate {0}...'.format(msg))
+                    log.warning('Authentication exception occurred; will retry {0}'.format(
+                        msg), exc_info=True)
+                    print_error(
+                        'Authentication error; will try to re-authenticate {0}...'.format(msg))
                 else:
                     raise  # outer handler will be called
 
