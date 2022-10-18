@@ -24,6 +24,7 @@ log = logging.getLogger(__name__)
 
 CONFIG_EXTENSION = '*.ok'
 
+
 def load_assignment(filepath=None, cmd_args=None):
     config = _get_config(filepath)
     if not isinstance(config, dict):
@@ -31,6 +32,7 @@ def load_assignment(filepath=None, cmd_args=None):
     if cmd_args is None:
         cmd_args = Settings()
     return Assignment(cmd_args, **config)
+
 
 def _get_config(config):
     if config is None:
@@ -47,7 +49,7 @@ def _get_config(config):
         config = configs[0]
     elif not os.path.isfile(config):
         raise ex.LoadingException(
-                'Could not find config file: {}'.format(config))
+            'Could not find config file: {}'.format(config))
 
     try:
         with open(config, 'r') as f:
@@ -118,7 +120,8 @@ class Assignment(core.Serializable):
     ##############
 
     def generate_encryption_key(self, keys_file):
-        data = [(filename, encryption.generate_key()) for filename in self._get_files()]
+        data = [(filename, encryption.generate_key())
+                for filename in self._get_files()]
         with open(keys_file, "w") as f:
             json.dump(data, f)
 
@@ -138,7 +141,8 @@ class Assignment(core.Serializable):
             print_success("All files are decrypted")
         elif undecrypted_files:
             if keys:
-                print_error("Unable to decrypt some files with the keys", ", ".join(keys))
+                print_error(
+                    "Unable to decrypt some files with the keys", ", ".join(keys))
             else:
                 print_error("No keys found, could not decrypt any files")
             print_error("    Non-decrypted files:", *undecrypted_files)
@@ -153,7 +157,8 @@ class Assignment(core.Serializable):
             except Exception as e:
                 print_error(
                     "Could not load decryption page {}: {}.".format(self.decryption_keypage, e))
-                print_error("You can pass in a key directly by running python3 ok --decrypt [KEY]")
+                print_error(
+                    "You can pass in a key directly by running python3 ok --decrypt [KEY]")
 
         decrypted_files = []
         undecrypted_files = []
@@ -202,7 +207,8 @@ class Assignment(core.Serializable):
                 try:
                     data = encryption.decrypt(data, key)
                 except encryption.InvalidKeyException:
-                    raise ValueError("Attempt to re-encrypt file with an invalid key")
+                    raise ValueError(
+                        "Attempt to re-encrypt file with an invalid key")
             return encryption.encrypt(data, key, padding)
 
         self._in_place_edit(path, encrypt)
@@ -225,7 +231,8 @@ class Assignment(core.Serializable):
         """
         Get all the test and submission source files associated with this assignment, deduplicated
         """
-        tests = [file for k, v in self.tests.items() for file in glob.glob(k) if v == 'ok_test' or v == 'scheme_test']
+        tests = [file for k, v in self.tests.items() for file in glob.glob(
+            k) if v == 'ok_test' or v == 'scheme_test']
         src = list(self.src)
         return sorted(set(tests + src))
 
@@ -269,7 +276,7 @@ class Assignment(core.Serializable):
         "scoring",
         "unlock",
         "trace",
-        "backup",
+        # "backup",
     ]
 
     def __init__(self, args, **fields):
@@ -334,9 +341,11 @@ class Assignment(core.Serializable):
                     if self.is_empty_init(file):
                         continue
                     try:
-                        module = importlib.import_module(self._TESTS_PACKAGE + '.' + source)
+                        module = importlib.import_module(
+                            self._TESTS_PACKAGE + '.' + source)
                     except ImportError:
-                        raise ex.LoadingException('Invalid test source: {}'.format(source))
+                        raise ex.LoadingException(
+                            'Invalid test source: {}'.format(source))
 
                     test_name = file
                     if parameter:
@@ -366,13 +375,16 @@ class Assignment(core.Serializable):
         backup = self._get_protocol("BackupProtocol")
         get_contents = self._get_protocol("FileContentsProtocol")
         if backup is None:
-            print_error("Error: autobackup specified by backup protocol not found")
+            print_error(
+                "Error: autobackup specified by backup protocol not found")
             return
+
         def messages_fn():
             msgs = messages.Messages()
             get_contents.run(msgs)
             return msgs
-        backup.run_in_loop(messages_fn, timedelta(minutes=1), synchronous=run_sync)
+        backup.run_in_loop(messages_fn, timedelta(
+            minutes=1), synchronous=run_sync)
 
     def _get_protocol(self, type_name):
         for protocol in self.protocol_map.values():
@@ -393,14 +405,17 @@ class Assignment(core.Serializable):
                 and len(self.default_tests) > 0:
             log.info('Using default tests (no questions specified): '
                      '{}'.format(self.default_tests))
-            bad_tests = sorted(test for test in self.default_tests if test not in self.test_map)
+            bad_tests = sorted(
+                test for test in self.default_tests if test not in self.test_map)
             if bad_tests:
                 error_message = ("Required question(s) missing: {}. "
-                    "This often is the result of accidentally deleting the question's doctests or the entire function.")
-                raise ex.LoadingException(error_message.format(", ".join(bad_tests)))
+                                 "This often is the result of accidentally deleting the question's doctests or the entire function.")
+                raise ex.LoadingException(
+                    error_message.format(", ".join(bad_tests)))
             return [self.test_map[test] for test in self.default_tests]
         elif not questions:
-            log.info('Using all tests (no questions specified and no default tests)')
+            log.info(
+                'Using all tests (no questions specified and no default tests)')
             return list(self.test_map.values())
         elif not self.test_map:
             log.info('No tests loaded')
@@ -409,7 +424,8 @@ class Assignment(core.Serializable):
         specified_tests = []
         for question in questions:
             if question not in self.test_map:
-                raise ex.InvalidTestInQuestionListException(list(self.test_map), question)
+                raise ex.InvalidTestInQuestionListException(
+                    list(self.test_map), question)
 
             log.info('Adding {} to specified tests'.format(question))
             if question not in specified_tests:
@@ -419,7 +435,8 @@ class Assignment(core.Serializable):
     def _load_protocols(self):
         log.info('Loading protocols')
         for proto in self._PROTOCOLS:
-            module = importlib.import_module(self._PROTOCOL_PACKAGE + '.' + proto)
+            module = importlib.import_module(
+                self._PROTOCOL_PACKAGE + '.' + proto)
             self.protocol_map[proto] = module.protocol(self.cmd_args, self)
             log.info('Loaded protocol "{}"'.format(proto))
 
@@ -431,17 +448,17 @@ class Assignment(core.Serializable):
             return
         log.info('Loading parsons problems')
         for prob_group_name, v in self.parsons.items():
-            req_probs = v.get('required', []) 
-            opt_probs = v.get('optional', []) 
+            req_probs = v.get('required', [])
+            opt_probs = v.get('optional', [])
             if 'required' not in v and 'optional' not in v:
                 error_message = 'Need a "required" and/or "optional" key in a parsons config object'
                 raise ex.LoadingException(error_message)
-            if not isinstance(req_probs, list) or not isinstance(opt_probs, list): 
+            if not isinstance(req_probs, list) or not isinstance(opt_probs, list):
                 error_message = 'The "required" and "optional" keys, if included in a parsons config object, must be lists'
                 raise ex.LoadingException(error_message)
             for prob in (req_probs + opt_probs):
                 if prob not in self.test_map:
-                    error_message = f'Problem name "{prob}" in the parsons problem group "{prob_group_name}" is invalid' 
+                    error_message = f'Problem name "{prob}" in the parsons problem group "{prob_group_name}" is invalid'
                     raise ex.LoadingException(error_message)
 
     def _print_header(self):
@@ -452,6 +469,7 @@ class Assignment(core.Serializable):
         print('OK, version {}'.format(client.__version__))
         format.print_line('=')
         print()
+
 
 class Settings:
     """Command-line arguments that are set programmatically instead of by
@@ -465,6 +483,7 @@ class Settings:
         )
         assignment = Assignment(args)
     """
+
     def __init__(self, **kwargs):
         from client.cli.ok import parse_input
         self.args = parse_input([])
