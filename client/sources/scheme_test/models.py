@@ -89,6 +89,7 @@ class SchemeTest(models.Test):
 
         output.off()
         reader = None
+        exception = False
         try:
             reader = TestReader(self.file_contents.split('\n'))
             src = self.scheme.Buffer(self.scheme.tokenize_lines(reader))
@@ -102,15 +103,18 @@ class SchemeTest(models.Test):
                         (next_line, self.scheme.create_global_frame()))
         except BaseException as e:
             output.on()
+            exception = True
             if reader:
                 print("Tests terminated due to unhandled exception "
                       "after line {}:\n"
                       "{}: {}".format(reader.line_number, e.__class__.__name__, e))
         output.on()
 
-        if reader:
-            return self._summarize(reader.output, reader.expected_output)
-        return 0, 0
+        passes, fails = self._summarize(reader.output, reader.expected_output)
+        if exception:
+            fails += 1
+        
+        return passes, fails
 
     def _summarize(self, output, expected_output):
         """Summarize results of running tests."""
